@@ -2,10 +2,6 @@ import requests
 from bs4 import BeautifulSoup
 import shutil
 
-urlbooks = 'https://books.toscrape.com/'
-response = requests.get(urlbooks)
-soup = BeautifulSoup(response.content.decode("utf-8", "ignore"), features="html.parser")
-dictionnary_books = {}
 
 
 def get_category():
@@ -28,7 +24,6 @@ def get_books(dico_matching):
         dictionnary_books[category] = []
         books_url = ['https://books.toscrape.com/catalogue/' + livre.find('a', href=True)['href'][9:] for livre in
                      soup.find_all('div', {'class': 'image_container'})]
-        # return books_url
         next = soup.find('li', {'class': 'next'})
         while next:
             if 'index.html' in url:
@@ -40,40 +35,53 @@ def get_books(dico_matching):
 
             response = requests.get(url)
             soup = BeautifulSoup(response.content.decode("utf-8", "ignore"), features="html.parser")
-            books_url = ['https://books.toscrape.com/catalogue/' + livre.find('a', href=True)['href'][9:] for livre in
+            data = ['https://books.toscrape.com/catalogue/' + livre.find('a', href=True)['href'][9:] for livre in
                          soup.find_all('div', {'class': 'image_container'})]
+            for d in data:
+                books_url.append(d)
             next = soup.find('li', {'class': 'next'})
-            return books_url
+        dictionnary_books[category] = books_url
 
+    return dictionnary_books
 
 def get_info(books_url):
-    for books in books_url:
-        to_add = []
-        response = requests.get(books)
-        soup = BeautifulSoup(response.content.decode("utf-8", "ignore"), features="html.parser")
-        title = soup.find('h1').text
-        description = soup.find('meta', {'name': 'description'})['content']
-        information = soup.find_all('td')
-        upc_book = information[0].text
-        price_ht = information[2].text
-        price_ttc = information[3].text
-        stock = information[5].text
-        stars = soup.find_all('p')[2]['class'][1]
-        to_add.append(title)
-        to_add.append(description)
-        to_add.append(upc_book)
-        to_add.append(price_ht)
-        to_add.append(price_ttc)
-        to_add.append(stock)
-        to_add.append(stars)
-        dictionnary_books[category].append(to_add)
-        print(title)
+    ret = {}
+    for category, book in books_url.items():
+        ret[category]=[]
+        for books in book:
+            to_add = []
+            response = requests.get(books)
+            soup = BeautifulSoup(response.content.decode("utf-8", "ignore"), features="html.parser")
+            title = soup.find('h1').text
+            description = soup.find('meta', {'name': 'description'})['content']
+            information = soup.find_all('td')
+            upc_book = information[0].text
+            price_ht = information[2].text
+            price_ttc = information[3].text
+            stock = information[5].text
+            stars = soup.find_all('p')[2]['class'][1]
+            to_add.append(title)
+            to_add.append(description)
+            to_add.append(upc_book)
+            to_add.append(price_ht)
+            to_add.append(price_ttc)
+            to_add.append(stock)
+            to_add.append(stars)
+            ret[category].append(to_add)
+    for q,v in ret:
+        print(q, v)
+    return ret
 
 
+urlbooks = 'https://books.toscrape.com/'
+response = requests.get(urlbooks)
+soup = BeautifulSoup(response.content.decode("utf-8", "ignore"), features="html.parser")
+dictionnary_books = {}
 result = get_category()
-get_books(result)
-result2 = get_books(result)
-get_info(result2)
+result = get_books(result)
+# result2 = get_books(result)
+get_info(result)
+
 
 #     image_url = 'https://books.toscrape.com/' + soup.find('div', {'class': 'item active'}).find('img')['src'][6:]
 #     to_add.append(image_url)
@@ -87,6 +95,3 @@ get_info(result2)
 #     print('Image sccessfully downloaded:', image_books)
 # else:
 #     print('Image could not be retreived')
-
-
-
