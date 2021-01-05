@@ -1,7 +1,8 @@
 import requests
 from bs4 import BeautifulSoup
-import shutil
 import pandas
+import os.path
+from os import path
 import urllib
 from urllib.request import urlretrieve
 
@@ -73,35 +74,26 @@ def get_info(books_url):
             to_add.append(stock)
             to_add.append(stars)
             dictionnary_books[category].append(to_add)
-    # for categories, informations in dictionnary_books.items():
-        # print(categories, informations)
+
     return dictionnary_books
 
 
-# def get_images(books_url):
-#             image_books = image_url.split('/')[-1]
-#             r = requests.get(image_url, stream=True)
-#             if r.status_code == 200:
-#                 r.raw.decode_content = True
-#                 with open("./image_books/" + image_books, 'wb') as f:
-#                     shutil.copyfileobj(r.raw, f)
-#
-#                 print('Image sccessfully downloaded:', image_books)
-#             else:
-#                 print('Image could not be retreived')
 def dl_images(url):
-    print(url[0])
-    file = "./images/" + url[0][len("https://books.toscrape.com/media/cache/fe/72/"):len(url[0])]
-    urllib.request.urlretrieve(url[0], file)
+    if not os.path.exists("./images/"):
+        os.mkdir("./images/")
+        print("File exists:" + str(path.exists("./images/")))
+    file = "./images/" + url[len("https://books.toscrape.com/media/cache/fe/72/"):len(url)]
+    urllib.request.urlretrieve(url, file)
 
 
 def write_data(data):
     for key, value in data.items():
         for v in value:
-            dl_images(v)
-        df = pandas.DataFrame(value[1:len(value)])
+            dl_images(v[0])
+        df = pandas.DataFrame(value[1:len(value)], columns=['image_url', 'title', 'description', 'upc_book', 'price_ht', 'price_ttc', 'stock', 'stars'])
         print(df.head())
         df.to_csv(key + '.csv', encoding='utf-8-sig')
+
 
 urlbooks = 'https://books.toscrape.com/'
 response = requests.get(urlbooks)
@@ -111,7 +103,3 @@ result = get_category()
 result = get_books(result)
 a = get_info(result)
 write_data(a)
-# d = {}
-# d["test"] = ["https://books.toscrape.com/catalogue/a-light-in-the-attic_1000/index.html", "https://books.toscrape.com/catalogue/a-light-in-the-attic_1000/index.html"]
-# data = get_info(d)
-# write_data(data)
