@@ -2,7 +2,6 @@ import requests
 from bs4 import BeautifulSoup
 import pandas
 import os.path
-from os import path
 import urllib
 from urllib.request import urlretrieve
 
@@ -38,8 +37,7 @@ def get_books(dico_matching):
 
             response = requests.get(url)
             soup = BeautifulSoup(response.content.decode("utf-8", "ignore"), features="html.parser")
-            next_pages = ['https://books.toscrape.com/catalogue/' + livre.find('a', href=True)['href'][9:] for livre in
-                         soup.find_all('div', {'class': 'image_container'})]
+            next_pages = ['https://books.toscrape.com/catalogue/' + livre.find('a', href=True)['href'][9:] for livre in soup.find_all('div', {'class': 'image_container'})]
             for pages in next_pages:
                 books_url.append(pages)
             next = soup.find('li', {'class': 'next'})
@@ -81,8 +79,7 @@ def get_info(books_url):
 def dl_images(url):
     if not os.path.exists("./images/"):
         os.mkdir("./images/")
-        print("File exists:" + str(path.exists("./images/")))
-    file = "./images/" + url[len("https://books.toscrape.com/media/cache/fe/72/"):len(url)]
+    file = "./images/" + url[len("https://books.toscrape.com/media/cache/fe/72/"):]
     urllib.request.urlretrieve(url, file)
 
 
@@ -91,7 +88,6 @@ def write_data(data):
         for v in value:
             dl_images(v[0])
         df = pandas.DataFrame(value[1:len(value)], columns=['image_url', 'title', 'description', 'upc_book', 'price_ht', 'price_ttc', 'stock', 'stars'])
-        print(df.head())
         df.to_csv(key + '.csv', encoding='utf-8-sig')
 
 
@@ -101,5 +97,5 @@ soup = BeautifulSoup(response.content.decode("utf-8", "ignore"), features="html.
 list_books = {}
 result = get_category()
 result = get_books(result)
-a = get_info(result)
-write_data(a)
+data = get_info(result)
+write_data(data)
